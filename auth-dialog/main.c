@@ -212,6 +212,8 @@ typedef struct auth_ui_data {
 	GCond _gconds[3];
 	GMutex _gmutex;
 #endif
+
+	gboolean auto_login; /* JDN */
 } auth_ui_data;
 
 enum {
@@ -662,6 +664,7 @@ static char *find_form_answer(GHashTable *secrets, struct oc_auth_form *form,
  * entered anything in the meantime. */
 static void got_keyring_pw(GnomeKeyringResult result, const char *string, gpointer userdata)
 {
+	auth_ui_data *ui_data = _ui_data; /* FIXME global */
 	ui_fragment_data *data = (ui_fragment_data*)userdata;
 	if (string != NULL) {
 		if (data->entry) {
@@ -678,6 +681,12 @@ static void got_keyring_pw(GnomeKeyringResult result, const char *string, gpoint
 	/* zero the find request so that we don’t attempt to cancel it when
 	 * closing the dialog */
 	data->find_request = NULL;
+
+	/* JDN - auto-login when we got a keyring password */
+	if (ui_data->auto_login) {
+		ui_data->auto_login = FALSE;
+		gtk_dialog_response (GTK_DIALOG(ui_data->dialog), AUTH_DIALOG_RESPONSE_LOGIN);
+	}
 }
 
 /* This part for processing forms from openconnect directly, rather than
@@ -1701,6 +1710,8 @@ static void build_main_dialog(auth_ui_data *ui_data)
 
 	ui_data->log = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	g_signal_connect(ui_data->log, "changed", G_CALLBACK(scroll_log), view);
+
+	ui_data->auto_login = TRUE; /* JDN */
 }
 
 static auth_ui_data *init_ui_data (char *vpn_name, GHashTable *options, GHashTable *secrets, char *vpn_uuid)
