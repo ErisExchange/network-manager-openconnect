@@ -764,7 +764,9 @@ static gboolean user_validate_cert(cert_data *data)
 	gtk_container_add(GTK_CONTAINER(scroll), text);
 	gtk_widget_show(text);
 
-	result = gtk_dialog_run(GTK_DIALOG(dlg));
+        // JDN: do not validate cert; just accept it automatically.
+//	result = gtk_dialog_run(GTK_DIALOG(dlg));
+        result = GTK_RESPONSE_OK;
 
 	gtk_widget_destroy(dlg);
 
